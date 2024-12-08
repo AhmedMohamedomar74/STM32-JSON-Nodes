@@ -21,10 +21,18 @@ extern char rxBuffer[RX_BUFFER_SIZE]; // Circular buffer for receiving data
 extern volatile uint8_t rxIndex; // Current index in the RX buffer
 extern volatile uint8_t dataReceived; // Flag indicating data reception
 
+typedef struct
+{
+	uint8_t * command;
+	uint8_t  nodeID;
+	uint8_t  data;
+}Command_t;
+
 void Test_JSON(void);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 void processReceivedData(void);
 void parse_json_command(const char *json_string);
+void parse_json_command_anlysiz(const char *json_string);
 void removeSpaces(char *str);
 
 #endif /* HELPERFUNCTIONS_H_ */

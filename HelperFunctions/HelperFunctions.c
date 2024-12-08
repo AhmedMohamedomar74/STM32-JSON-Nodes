@@ -115,6 +115,56 @@ void parse_json_command(const char *json_string) {
     cJSON_Delete(json);
 }
 
+void parse_json_command_anlysiz(const char *json_string)
+{
+    // Parse the JSON string
+    Command_t command_struct;
+    cJSON *json = cJSON_Parse(json_string);
+    if (json == NULL) {
+        sprintf(buffer, "Error parsing JSON string: %s\r", cJSON_GetErrorPtr());
+        HAL_UART_Transmit(&huart1, buffer, strlen(buffer), HAL_MAX_DELAY);
+        return;
+    }
+
+    // Extract fields
+    cJSON *command = cJSON_GetObjectItem(json, "command");
+    cJSON *node_id = cJSON_GetObjectItem(json, "nodeID");
+    cJSON *data = cJSON_GetObjectItem(json, "data");
+
+    // Initialize the command_struct members
+    memset(&command_struct, 0, sizeof(command_struct));
+
+    if (cJSON_IsString(command) && command->valuestring != NULL) {
+        command_struct.command = (uint8_t *)strdup(command->valuestring); // Duplicate string
+    }
+    if (cJSON_IsString(node_id) && node_id->valuestring != NULL) {
+    	command_struct.nodeID = (uint8_t)strtol(node_id->valuestring, NULL, 16);
+    }
+    if (cJSON_IsString(data) && data->valuestring != NULL) {
+        command_struct.data = (uint8_t)atoi(data->valuestring); // Convert string to int
+    }
+
+    // Send the values over UART
+    if (command_struct.command != NULL) {
+        sprintf(buffer, "Command: %s\r", command_struct.command);
+        HAL_UART_Transmit(&huart1, buffer, strlen(buffer), HAL_MAX_DELAY);
+    }
+
+    sprintf(buffer, "Node ID: 0x%X\r", command_struct.nodeID);
+    HAL_UART_Transmit(&huart1, buffer, strlen(buffer), HAL_MAX_DELAY);
+    sprintf(buffer, "Data: %u\r", command_struct.data);
+    HAL_UART_Transmit(&huart1, buffer, strlen(buffer), HAL_MAX_DELAY);
+
+    // Free allocated memory for the command string
+    if (command_struct.command != NULL) {
+        free(command_struct.command);
+    }
+
+    // Free the JSON object
+    cJSON_Delete(json);
+}
+
+
 void removeSpaces(char *str) {
     uint8_t i, j = 0;
     uint8_t len = strlen(str);

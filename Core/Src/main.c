@@ -118,7 +118,7 @@ int main(void)
 		dataReceived = 0;
 		// parse_json_command(rxBuffer);
 		removeSpaces(rxBuffer);
-		parse_json_command(rxBuffer);
+		parse_json_command_anlysiz(rxBuffer);
 		// HAL_UART_Transmit(&huart1, (uint8_t *)txBuffer, strlen(txBuffer), HAL_MAX_DELAY);
 //		parse_json_string(rxBuffer, &json_object);
 //		for (int i = 0; i < json_object.count; i++) {
