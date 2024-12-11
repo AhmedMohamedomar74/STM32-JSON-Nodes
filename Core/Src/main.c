@@ -21,7 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "HelperFunctions.h"
+#include "LM35.h"
+#include "LDR.h"
+#include "JsonHandling.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,11 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define JSON_BUFFER_SIZE 256
-#define MAX_JSON_KEYS 10
-#define MAX_KEY_LENGTH 20
-#define MAX_VALUE_LENGTH 20
-
+#define RX_BUFFER_SIZE 50
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,21 +43,29 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-uint8_t buffer[50] = {0};
-char rxBuffer[RX_BUFFER_SIZE] = {0}; // Circular buffer for receiving data
-volatile uint8_t rxIndex = 0; // Current index in the RX buffer
-volatile uint8_t dataReceived = 0; // Flag indicating data reception
+char buffer[BUFFER_SIZE];
+
+char rxBuffer[RX_BUFFER_SIZE]; // Circular buffer for receiving data
+volatile uint8_t rxIndex; // Current index in the RX buffer
+volatile uint8_t dataReceived; // Flag indicating data reception
+Node_t NodeTemp;
+Node_t NodeLDR;
+Node_t NodeRELAY;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+void CommandHandling(Command_t *commandPtr);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -73,7 +80,7 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	// JSONObject json_object;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,42 +101,40 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_ADC1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+//  Node_t  Node_temp_struct;
+//  Node_t Node_ldr;
+//  LDR_voidinit(&Node_ldr);
+//  LM35_voidInit(&Node_temp_struct);
+//  cJSON *jsonObject = generateJSONObjectTemp(&Node_temp_struct);
+//  PrintJson(jsonObject);
   HAL_UART_Receive_IT(&huart1, (uint8_t *)&rxBuffer[rxIndex], 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // Test_JSON();
-  // const char *json_test_1 = "{\"command\":\"ACT\", \"nodeID\":\"20\", \"data\":\"0x1\"}";
-  // const char *json_test_2 = "{\"nodeType\":\"NS\", \"nodeID\":\"128\", \"data\":\"DONE\"}";
-
-  // HAL_UART_Transmit(&huart1, json_command, strlen(json_command), HAL_MAX_DELAY);
-  // Call the function to parse and extract values
-  // parse_json_command(json_test_1);
   while (1)
   {
     /* USER CODE END WHILE */
-	if (dataReceived)
-	{
-		// Process the received data
-		// processReceivedData();
-		dataReceived = 0;
-		// parse_json_command(rxBuffer);
-		removeSpaces(rxBuffer);
-		parse_json_command_anlysiz(rxBuffer);
-		// HAL_UART_Transmit(&huart1, (uint8_t *)txBuffer, strlen(txBuffer), HAL_MAX_DELAY);
-//		parse_json_string(rxBuffer, &json_object);
-//		for (int i = 0; i < json_object.count; i++) {
-//		        sprintf(buffer,"Key: %s, Value: %s\r", json_object.pairs[i].key, json_object.pairs[i].value);
-//		    }
-		// Restart UART reception
-		HAL_UART_Receive_IT(&huart1, (uint8_t *)&rxBuffer[rxIndex], 1);
 
-	}
     /* USER CODE BEGIN 3 */
-
+//	LM35_voidGetTemperature(&Node_temp_struct);
+//	cJSON *jsonObject = generateJSONObjectTemp(&Node_temp_struct);
+//	PrintJson(jsonObject);
+//	LDR_voidGetLightingIntensity(&Node_ldr);
+//	jsonObject = generateJSONObjectTemp(&Node_ldr);
+//	PrintJson(jsonObject);
+//	HAL_Delay(1000);  // Wait for 1 second before repeating the loop
+	  if (dataReceived)
+	  	{
+	  		dataReceived = 0;
+	  		Command_t test;
+	  		parse_json_command(rxBuffer,&test);
+	  		CommandHandling(&test);
+//	  		HAL_UART_Receive_IT(&huart1, (uint8_t *)&rxBuffer[rxIndex], 1);
+	  	}
   }
   /* USER CODE END 3 */
 }
@@ -142,6 +147,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -168,6 +174,59 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV2;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -210,6 +269,7 @@ static void MX_USART1_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
@@ -217,11 +277,117 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART1)
+    {
+        if (rxBuffer[rxIndex] == '\n' || rxBuffer[rxIndex] == '}' || rxBuffer[rxIndex] == '\0' || rxIndex >= RX_BUFFER_SIZE - 1)
+        {
+            // End of message
+            rxBuffer[rxIndex + 1] = '\0'; // Null-terminate the string
+            dataReceived = 1;
+            rxIndex = 0; // Reset the buffer index
+        }
+        else
+        {
+            // Increment buffer index for next character
+            rxIndex++;
+        }
+
+        // Continue receiving data
+        HAL_UART_Receive_IT(&huart1, (uint8_t *)&rxBuffer[rxIndex], 1);
+    }
+}
+
+void CommandHandling(Command_t *commandPtr)
+{
+	cJSON * cJSONOPtr;
+	if (strcmp(commandPtr->command, "ENA") == 0) {
+	    if (TempSensorID == commandPtr->nodeID) {
+	    	LM35_voidInit(&NodeTemp);
+	        cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
+	        PrintJson(cJSONOPtr);
+	    } else if (LDRSensorID == commandPtr->nodeID) {
+	        LDR_voidinit(&NodeLDR);
+	        cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
+	        PrintJson(cJSONOPtr);
+	    }
+	    else if (RelayID == commandPtr->nodeID) {
+			RELAY_voidInit(&NodeRELAY);
+			cJSONOPtr = generateJSONObjectTemp(&NodeRELAY);
+			PrintJson(cJSONOPtr);
+		}
+	}
+	else if (strcmp(commandPtr->command, "DIS") == 0) {
+	    if (TempSensorID == commandPtr->nodeID) {
+	        LM35_voidDeInit(&NodeTemp);
+	    } else if (LDRSensorID == commandPtr->nodeID) {
+	        LDR_voidDeInit(&NodeLDR);
+	        cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
+	        PrintJson(cJSONOPtr);
+	    }
+	    else if (RelayID == commandPtr->nodeID) {
+			RELAY_voidDeInit(&NodeRELAY);
+			cJSONOPtr = generateJSONObjectTemp(&NodeRELAY);
+			PrintJson(cJSONOPtr);
+	    }
+	}
+
+	else if (strcmp(commandPtr->command, "ACT") == 0) {
+		 NodeRELAY.Data = commandPtr->data;
+		RELAY_voidSetPin(&NodeRELAY);
+		}
+	else if (strcmp(commandPtr->command, "DUR") == 0) {
+		if (TempSensorID == commandPtr->nodeID) {
+				LM35_voidGetTemperature(&NodeTemp);
+				cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
+				PrintJson(cJSONOPtr);
+			} else if (LDRSensorID == commandPtr->nodeID) {
+				LDR_voidGetLightingIntensity(&NodeLDR);
+				cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
+				PrintJson(cJSONOPtr);
+			}
+		}
+	else if (strcmp(commandPtr->command, "DUR") == 0) {
+			if (TempSensorID == commandPtr->nodeID) {
+					LM35_voidGetTemperature(&NodeTemp);
+					cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
+					PrintJson(cJSONOPtr);
+				} else if (LDRSensorID == commandPtr->nodeID) {
+					LDR_voidGetLightingIntensity(&NodeLDR);
+					cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
+					PrintJson(cJSONOPtr);
+				}
+			}
+	else if (strcmp(commandPtr->command, "STA") == 0) {
+		if (TempSensorID == commandPtr->nodeID) {
+			cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
+			PrintJson(cJSONOPtr);
+				} else if (LDRSensorID == commandPtr->nodeID) {
+					cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
+					PrintJson(cJSONOPtr);
+				}
+				else if (RelayID == commandPtr->nodeID) {
+					cJSONOPtr = generateJSONObjectTemp(&NodeRELAY);
+					PrintJson(cJSONOPtr);
+				}
+			}
+}
 
 /* USER CODE END 4 */
 
@@ -252,7 +418,7 @@ void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\r", file, line) */
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

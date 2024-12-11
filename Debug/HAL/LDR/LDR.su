@@ -1,0 +1,3 @@
+../HAL/LDR/LDR.c:10:12:LDR_voidinit	0	static
+../HAL/LDR/LDR.c:22:12:LDR_voidDeInit	0	static
+../HAL/LDR/LDR.c:34:12:LDR_voidGetLightingIntensity	32	static
