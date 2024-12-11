@@ -1,3 +1,4 @@
+
 # STM32 JSON Nodes Project
 
 ## Project Overview
@@ -46,6 +47,32 @@ The system is designed to:
    Use the Proteus simulation file included in the repository to test the system’s functionality.
 2. **Functional Testing**:  
    Validate JSON message parsing, sensor readings, and actuator control via UART.
+
+### Test Commands
+Use the following JSON commands to test the system. Copy any of these commands and send them via the UART interface to observe the corresponding functionality:
+
+#### Relay
+```json
+{"command":"ENA", "nodeID":"0x50", "data":"NULL"} // Enable Relay Actuator
+{"command":"ACT", "nodeID":"0x50", "data":"1"} // Activate Relay Actuator
+{"command":"ACT", "nodeID":"0x50", "data":"0"} // Deactivate Relay Actuator
+{"command":"STA","nodeID":"0x50","data":"NULL"} // Get Relay Actuator Status
+{"command":"DIS","nodeID":"0x50","data":"NULL"} // Disable Relay Actuator
+```
+
+#### Temperature Sensor
+```json
+{"command":"ENA", "nodeID":"0x80", "data":"NULL"} // Enable temp sensor
+{"command":"DUR", "nodeID":"0x80", "data":"5"} // Make temp sensor send value every 5 sec
+{"command":"DIS","nodeID":"0x80","data":"NULL"} // Disable temp sensor
+```
+
+#### LDR
+```json
+{"command":"ENA", "nodeID":"0x81", "data":"NULL"} // Enable LDR sensor
+{"command":"DUR", "nodeID":"0x81", "data":"5"} // Make LDR sensor send value every 5 sec
+{"command":"DIS","nodeID":"0x81","data":"NULL"} // Disable LDR sensor
+```
 
 ## Known Issues
 - FreeRTOS integration with the Proteus simulation environment is currently not functional. Efforts to resolve this issue are ongoing and updates will be provided.
