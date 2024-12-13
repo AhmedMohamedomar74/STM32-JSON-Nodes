@@ -24,6 +24,7 @@
 #include "LM35.h"
 #include "LDR.h"
 #include "JsonHandling.h"
+#include "Timer.h"
 
 /* USER CODE END Includes */
 
@@ -56,6 +57,7 @@ volatile uint8_t dataReceived; // Flag indicating data reception
 Node_t NodeTemp;
 Node_t NodeLDR;
 Node_t NodeRELAY;
+cJSON * cJSONOPtr;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,6 +68,8 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 void CommandHandling(Command_t *commandPtr);
+void SendDataTemp();
+void SendDataLdr();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,6 +107,7 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
+  Timer_Init();
   /* USER CODE BEGIN 2 */
 //  Node_t  Node_temp_struct;
 //  Node_t Node_ldr;
@@ -127,6 +132,7 @@ int main(void)
 //	jsonObject = generateJSONObjectTemp(&Node_ldr);
 //	PrintJson(jsonObject);
 //	HAL_Delay(1000);  // Wait for 1 second before repeating the loop
+	  Timer_Check();
 	  if (dataReceived)
 	  	{
 	  		dataReceived = 0;
@@ -316,7 +322,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void CommandHandling(Command_t *commandPtr)
 {
-	cJSON * cJSONOPtr;
 	if (strcmp(commandPtr->command, "ENA") == 0) {
 	    if (TempSensorID == commandPtr->nodeID) {
 	    	LM35_voidInit(&NodeTemp);
@@ -336,15 +341,13 @@ void CommandHandling(Command_t *commandPtr)
 	else if (strcmp(commandPtr->command, "DIS") == 0) {
 	    if (TempSensorID == commandPtr->nodeID) {
 	        LM35_voidDeInit(&NodeTemp);
+	        Timer_Stop(SendDataTemp);
 	    } else if (LDRSensorID == commandPtr->nodeID) {
 	        LDR_voidDeInit(&NodeLDR);
-	        cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
-	        PrintJson(cJSONOPtr);
+	        Timer_Stop(SendDataLdr);
 	    }
 	    else if (RelayID == commandPtr->nodeID) {
 			RELAY_voidDeInit(&NodeRELAY);
-			cJSONOPtr = generateJSONObjectTemp(&NodeRELAY);
-			PrintJson(cJSONOPtr);
 	    }
 	}
 
@@ -353,25 +356,10 @@ void CommandHandling(Command_t *commandPtr)
 		RELAY_voidSetPin(&NodeRELAY);
 		}
 	else if (strcmp(commandPtr->command, "DUR") == 0) {
-		if (TempSensorID == commandPtr->nodeID) {
-				LM35_voidGetTemperature(&NodeTemp);
-				cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
-				PrintJson(cJSONOPtr);
-			} else if (LDRSensorID == commandPtr->nodeID) {
-				LDR_voidGetLightingIntensity(&NodeLDR);
-				cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
-				PrintJson(cJSONOPtr);
-			}
-		}
-	else if (strcmp(commandPtr->command, "DUR") == 0) {
 			if (TempSensorID == commandPtr->nodeID) {
-					LM35_voidGetTemperature(&NodeTemp);
-					cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
-					PrintJson(cJSONOPtr);
+				Timer_StartRepeat(SendDataTemp, (commandPtr->data * 1000));
 				} else if (LDRSensorID == commandPtr->nodeID) {
-					LDR_voidGetLightingIntensity(&NodeLDR);
-					cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
-					PrintJson(cJSONOPtr);
+				Timer_StartRepeat(SendDataLdr, (commandPtr->data * 1000));
 				}
 			}
 	else if (strcmp(commandPtr->command, "STA") == 0) {
@@ -387,6 +375,20 @@ void CommandHandling(Command_t *commandPtr)
 					PrintJson(cJSONOPtr);
 				}
 			}
+}
+
+void SendDataTemp()
+{
+	LM35_voidGetTemperature(&NodeTemp);
+	cJSONOPtr = generateJSONObjectTemp(&NodeTemp);
+	PrintJson(cJSONOPtr);
+}
+
+void SendDataLdr()
+{
+	LDR_voidGetLightingIntensity(&NodeLDR);
+	cJSONOPtr = generateJSONObjectTemp(&NodeLDR);
+	PrintJson(cJSONOPtr);
 }
 
 /* USER CODE END 4 */

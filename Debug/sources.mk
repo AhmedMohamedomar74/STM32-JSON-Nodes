@@ -30,4 +30,5 @@ HAL/JsonHandling \
 HAL/LDR \
 HAL/LM35 \
 HAL/Relay \
+MCAL/TIMER \
 

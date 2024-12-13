@@ -52,6 +52,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Temperaturesensor/HAL/NODE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Temperaturesensor/HAL/JsonHandling}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Temperaturesensor/HAL/Relay}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Temperaturesensor/MCAL/TIMER}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.220429124" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -86,6 +87,8 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/LM35"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/NODE"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Relay"/>
+						<entry excluding="TIMER" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="MCAL"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="MCAL/TIMER"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -166,6 +169,8 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/LM35"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/NODE"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="HAL/Relay"/>
+						<entry excluding="TIMER" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="MCAL"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="MCAL/TIMER"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

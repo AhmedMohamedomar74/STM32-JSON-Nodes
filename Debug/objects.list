@@ -26,3 +26,4 @@
 "./HAL/LDR/LDR.o"
 "./HAL/LM35/LM35.o"
 "./HAL/Relay/RELAY.o"
+"./MCAL/TIMER/Timer.o"
