@@ -42,26 +42,45 @@ cJSON* generateJSONObjectTemp(Node_t *node)
     return json; // Return the JSON object
 }
 
-void PrintJson(cJSON * jsonObject)
+void PrintJson(cJSON *jsonObject)
 {
-	if (jsonObject != NULL)
-		    {
-		  	  // Convert JSON object to string
-		  	  char *jsonString = cJSON_Print(jsonObject);
+    if (jsonObject != NULL)
+    {
+        // Convert JSON object to string
+        char *jsonString = cJSON_Print(jsonObject);
+        if (jsonString != NULL)
+        {
+            // Reallocate memory for JSON string to add '\n'
+            size_t length = strlen(jsonString);
+            char *resizedJsonString = (char *)realloc(jsonString, length + 2); // +1 for '\n', +1 for '\0'
+            if (resizedJsonString != NULL)
+            {
+                // Append newline and null terminator
+                resizedJsonString[length] = '\r';   // Add newline character
+                resizedJsonString[length + 1] = '\0'; // Null-terminate the string
 
-		  	  if (jsonString != NULL)
-		  	  {
-		  		  HAL_UART_Transmit(&huart1, (uint8_t*)jsonString, strlen(jsonString), HAL_MAX_DELAY);
-		  		  free(jsonString); // Free the allocated memory for the JSON string
-		  	  }
-		  	  cJSON_Delete(jsonObject); // Free the JSON object
-		    }
-		    else
-		    {
-		  	  sprintf(buffer,"Failed to generate JSON\r");
-		  	  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-		    }
+                // Transmit the modified JSON string
+                HAL_UART_Transmit(&huart1, (uint8_t *)resizedJsonString, strlen(resizedJsonString), HAL_MAX_DELAY);
+
+                free(resizedJsonString); // Free the allocated memory
+            }
+            else
+            {
+                // Handle reallocation failure
+                HAL_UART_Transmit(&huart1, (uint8_t *)"Failed to allocate memory\n", 26, HAL_MAX_DELAY);
+                free(jsonString); // Free the original JSON string
+            }
+        }
+        cJSON_Delete(jsonObject); // Free the JSON object
+    }
+    else
+    {
+        sprintf(buffer, "Failed to generate JSON\r\n");
+        HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), HAL_MAX_DELAY);
+    }
 }
+
+
 
 void parse_json_command(const char *json_string,Command_t * CommandPtr)
 {

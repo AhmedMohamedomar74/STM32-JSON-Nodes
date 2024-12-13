@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define MAX_TIMERS 10  // Adjust based on your requirements
+#define MAX_TIMERS 2  // Adjust based on your requirements
 
 typedef void (*CallbackFunction)(void); // Function pointer type for callback
 
