@@ -92,6 +92,8 @@ The STM32 JSON Nodes project focuses on creating an embedded application capable
 - **Simulation Files**: Proteus simulation for hardware testing.
 - **Demonstration Video**: Explains functionality and showcases the system in action.
 
+## Project Demonstration
+![Nodes-MadewithClipchamp-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/a856e039-e90e-46e0-ac8c-4fafda6e227d)
 ## Resources
 - [GitHub Repository](https://github.com/AhmedMohamedomar74/STM32-JSON-Nodes)
 - [Video Demonstration](https://drive.google.com/drive/folders/1BTrJEyA87ykYwzaS-UNg11ssfMj1YT2L?usp=drive_link)
